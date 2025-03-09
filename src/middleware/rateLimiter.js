@@ -45,9 +45,9 @@ export const apiLimiter = createLimiter(
   'Too many requests, please try again later.'
 );
 
-// Stricter rate limiter for authentication endpoints
+// More lenient rate limiter for authentication endpoints: 20 attempts per 15 minutes
 export const authLimiter = createLimiter(
   15 * 60 * 1000, // 15 minutes
-  5,
+  20, // Increased from 5 to 20 attempts
   'Too many login attempts, please try again later.'
 );

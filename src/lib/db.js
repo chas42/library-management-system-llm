@@ -50,6 +50,107 @@ export const initDb = async () => {
       FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
     );
 
+    -- Books
+    CREATE TABLE IF NOT EXISTS books (
+      id TEXT PRIMARY KEY,
+      title TEXT NOT NULL,
+      isbn TEXT UNIQUE NOT NULL,
+      publisher TEXT NOT NULL,
+      publication_year INTEGER NOT NULL,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    );
+
+    -- Authors
+    CREATE TABLE IF NOT EXISTS authors (
+      id TEXT PRIMARY KEY,
+      name TEXT NOT NULL,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    );
+
+    -- Book Authors (Many-to-Many)
+    CREATE TABLE IF NOT EXISTS book_authors (
+      book_id TEXT NOT NULL,
+      author_id TEXT NOT NULL,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      PRIMARY KEY (book_id, author_id),
+      FOREIGN KEY (book_id) REFERENCES books(id) ON DELETE CASCADE,
+      FOREIGN KEY (author_id) REFERENCES authors(id) ON DELETE CASCADE
+    );
+
+    -- Genres
+    CREATE TABLE IF NOT EXISTS genres (
+      id TEXT PRIMARY KEY,
+      name TEXT UNIQUE NOT NULL,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    );
+
+    -- Book Genres (Many-to-Many)
+    CREATE TABLE IF NOT EXISTS book_genres (
+      book_id TEXT NOT NULL,
+      genre_id TEXT NOT NULL,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      PRIMARY KEY (book_id, genre_id),
+      FOREIGN KEY (book_id) REFERENCES books(id) ON DELETE CASCADE,
+      FOREIGN KEY (genre_id) REFERENCES genres(id) ON DELETE CASCADE
+    );
+
+    -- Book Copies
+    CREATE TABLE IF NOT EXISTS book_copies (
+      id TEXT PRIMARY KEY,
+      book_id TEXT NOT NULL,
+      status TEXT NOT NULL DEFAULT 'available' 
+        CHECK (status IN ('available', 'borrowed', 'reserved', 'maintenance')),
+      condition TEXT NOT NULL DEFAULT 'new'
+        CHECK (condition IN ('new', 'good', 'fair', 'poor')),
+      location TEXT,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY (book_id) REFERENCES books(id) ON DELETE CASCADE
+    );
+
+    -- Members
+    CREATE TABLE IF NOT EXISTS members (
+      id TEXT PRIMARY KEY,
+      name TEXT NOT NULL,
+      email TEXT UNIQUE NOT NULL,
+      phone TEXT,
+      status TEXT NOT NULL DEFAULT 'active' 
+        CHECK (status IN ('active', 'suspended', 'inactive')),
+      max_loans INTEGER NOT NULL DEFAULT 5,
+      current_loans INTEGER NOT NULL DEFAULT 0,
+      total_fines DECIMAL(10,2) NOT NULL DEFAULT 0.00,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    );
+
+    -- Loans
+    CREATE TABLE IF NOT EXISTS loans (
+      id TEXT PRIMARY KEY,
+      book_copy_id TEXT NOT NULL,
+      member_id TEXT NOT NULL,
+      loan_date DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+      due_date DATETIME NOT NULL,
+      return_date DATETIME,
+      status TEXT NOT NULL DEFAULT 'active'
+        CHECK (status IN ('active', 'returned', 'overdue')),
+      fine_amount DECIMAL(10,2) DEFAULT 0.00,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY (book_copy_id) REFERENCES book_copies(id) ON DELETE RESTRICT,
+      FOREIGN KEY (member_id) REFERENCES members(id) ON DELETE RESTRICT
+    );
+
+    -- Reservations
+    CREATE TABLE IF NOT EXISTS reservations (
+      id TEXT PRIMARY KEY,
+      book_id TEXT NOT NULL,
+      member_id TEXT NOT NULL,
+      reservation_date DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+      status TEXT NOT NULL DEFAULT 'pending'
+        CHECK (status IN ('pending', 'fulfilled', 'cancelled', 'expired')),
+      expiry_date DATETIME NOT NULL,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY (book_id) REFERENCES books(id) ON DELETE CASCADE,
+      FOREIGN KEY (member_id) REFERENCES members(id) ON DELETE CASCADE
+    );
+
     -- Courses
     CREATE TABLE IF NOT EXISTS courses (
       id TEXT PRIMARY KEY,
@@ -143,6 +244,12 @@ export const initDb = async () => {
     CREATE INDEX IF NOT EXISTS idx_users_email ON users(email);
     CREATE INDEX IF NOT EXISTS idx_users_role ON users(role);
     CREATE INDEX IF NOT EXISTS idx_student_profiles_parent ON student_profiles(parent_id);
+    CREATE INDEX IF NOT EXISTS idx_books_isbn ON books(isbn);
+    CREATE INDEX IF NOT EXISTS idx_books_title ON books(title);
+    CREATE INDEX IF NOT EXISTS idx_book_copies_status ON book_copies(status);
+    CREATE INDEX IF NOT EXISTS idx_loans_status ON loans(status);
+    CREATE INDEX IF NOT EXISTS idx_loans_due_date ON loans(due_date);
+    CREATE INDEX IF NOT EXISTS idx_reservations_status ON reservations(status);
     CREATE INDEX IF NOT EXISTS idx_courses_department ON courses(department);
     CREATE INDEX IF NOT EXISTS idx_course_sections_semester ON course_sections(semester, year);
     CREATE INDEX IF NOT EXISTS idx_course_materials_section ON course_materials(section_id);

@@ -90,6 +90,58 @@ curl -X POST http://localhost:3000/api/books \
   }'
 ```
 
+## Members
+
+### Get All Members
+```bash
+curl -X GET http://localhost:3000/api/members \
+  -H "Authorization: Bearer YOUR_JWT_TOKEN"
+```
+
+### Get Single Member
+```bash
+curl -X GET http://localhost:3000/api/members/MEMBER_ID \
+  -H "Authorization: Bearer YOUR_JWT_TOKEN"
+```
+
+### Create Member
+```bash
+curl -X POST http://localhost:3000/api/members \
+  -H "Authorization: Bearer YOUR_JWT_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "name": "Jane Smith",
+    "email": "jane.smith@example.com",
+    "phone": "555-0123"
+  }'
+```
+
+## Loans
+
+### Get All Loans
+```bash
+curl -X GET http://localhost:3000/api/loans \
+  -H "Authorization: Bearer YOUR_JWT_TOKEN"
+```
+
+### Create Loan
+```bash
+curl -X POST http://localhost:3000/api/loans \
+  -H "Authorization: Bearer YOUR_JWT_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "book_copy_id": "BOOK_COPY_ID",
+    "member_id": "MEMBER_ID",
+    "due_date": "2024-04-14T23:59:59Z"
+  }'
+```
+
+### Return Book
+```bash
+curl -X POST http://localhost:3000/api/loans/LOAN_ID/return \
+  -H "Authorization: Bearer YOUR_JWT_TOKEN"
+```
+
 ## Reservations
 
 ### Get All Reservations (Admin/Librarian)

@@ -10,10 +10,14 @@ export class Member {
     if (!member) return null;
 
     member.loans = await db.all(`
-      SELECT loans.*, books.title as book_title
-      FROM loans
-      JOIN books ON loans.book_id = books.id
-      WHERE member_id = ?
+      SELECT 
+        l.*,
+        b.title as book_title
+      FROM loans l
+      JOIN book_copies bc ON l.book_copy_id = bc.id
+      JOIN books b ON bc.book_id = b.id
+      WHERE l.member_id = ?
+      ORDER BY l.loan_date DESC
     `, id);
 
     return member;
