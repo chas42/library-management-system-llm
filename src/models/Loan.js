@@ -1,8 +1,9 @@
 import crypto from 'crypto';
 
 export class Loan {
-  static async findAll(db) {
-    return db.all(`
+  static async findAll(db, { page = 1, limit = 10, status }) {
+    const offset = (page - 1) * limit;
+    let query = `
       SELECT 
         l.*,
         b.title as book_title,
@@ -13,8 +14,38 @@ export class Loan {
       JOIN book_copies bc ON l.book_copy_id = bc.id
       JOIN books b ON bc.book_id = b.id
       JOIN members m ON l.member_id = m.id
-      ORDER BY l.created_at DESC
-    `);
+    `;
+
+    const params = [];
+
+    if (status) {
+      query += ' WHERE l.status = ?';
+      params.push(status);
+    }
+
+    // Get total count
+    const countQuery = `
+      SELECT COUNT(*) as total FROM loans l
+      ${status ? 'WHERE l.status = ?' : ''}
+    `;
+    
+    const { total } = await db.get(countQuery, ...params);
+
+    // Add ordering and pagination
+    query += ' ORDER BY l.created_at DESC LIMIT ? OFFSET ?';
+    params.push(limit, offset);
+
+    const loans = await db.all(query, ...params);
+
+    return {
+      loans,
+      pagination: {
+        total,
+        page: parseInt(page),
+        limit: parseInt(limit),
+        totalPages: Math.ceil(total / limit)
+      }
+    };
   }
 
   static async findById(db, id) {

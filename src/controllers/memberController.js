@@ -5,8 +5,23 @@ export const memberController = {
   async getAll(req, res) {
     try {
       const db = req.app.locals.db;
-      const members = await Member.findAll(db);
-      res.json(members);
+      const { page = 1, limit = 10, search } = req.query;
+
+      const result = await Member.findAll(db, {
+        page: parseInt(page),
+        limit: parseInt(limit),
+        search
+      });
+
+      res.json({
+        members: result.members,
+        pagination: {
+          total: result.pagination.total,
+          page: result.pagination.page,
+          limit: result.pagination.limit,
+          totalPages: result.pagination.totalPages
+        }
+      });
     } catch (error) {
       res.status(500).json({ error: error.message });
     }

@@ -11,10 +11,10 @@ export const bookController = {
         genre,
         author,
         available,
-        sortBy,
-        sortOrder,
-        page,
-        limit
+        sortBy = 'title',
+        sortOrder = 'asc',
+        page = 1,
+        limit = 10
       } = req.query;
 
       const result = await Book.findAll(db, {
@@ -24,11 +24,19 @@ export const bookController = {
         available,
         sortBy,
         sortOrder,
-        page: parseInt(page) || 1,
-        limit: parseInt(limit) || 10
+        page: parseInt(page),
+        limit: parseInt(limit)
       });
 
-      res.json(result);
+      res.json({
+        books: result.books,
+        pagination: {
+          total: result.pagination.total,
+          page: result.pagination.page,
+          limit: result.pagination.limit,
+          totalPages: result.pagination.totalPages
+        }
+      });
     } catch (error) {
       res.status(500).json({ error: error.message });
     }

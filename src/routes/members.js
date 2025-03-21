@@ -1,11 +1,25 @@
 import { Router } from 'express';
-import { body } from 'express-validator';
+import { body, query } from 'express-validator';
 import { memberController } from '../controllers/memberController.js';
 
 export const membersRouter = Router();
 
-membersRouter.get('/', memberController.getAll);
-membersRouter.get('/:id', memberController.getOne);
+// Get all members with pagination
+membersRouter.get('/',
+  [
+    query('page').optional().isInt({ min: 1 }),
+    query('limit').optional().isInt({ min: 1, max: 100 }),
+    query('search').optional().isString()
+  ],
+  memberController.getAll
+);
+
+// Get single member
+membersRouter.get('/:id', 
+  memberController.getOne
+);
+
+// Create new member
 membersRouter.post('/',
   [
     body('name').notEmpty().trim(),

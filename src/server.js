@@ -11,7 +11,6 @@ import { reservationsRouter } from './routes/reservations.js';
 import { usersRouter } from './routes/users.js';
 import { coursesRouter } from './routes/courses.js';
 import { authenticateToken, authorizeRoles } from './middleware/auth.js';
-import { apiLimiter, authLimiter } from './middleware/rateLimiter.js';
 
 config();
 
@@ -33,11 +32,8 @@ initDb().then(db => {
   app.use(morgan('dev'));
   app.use(express.json());
 
-  // Apply rate limiting to all routes
-  app.use('/api/', apiLimiter);
-
-  // Public routes with stricter rate limiting
-  app.use('/api/auth', authLimiter, authRouter);
+  // Public routes
+  app.use('/api/auth', authRouter);
 
   // User management routes
   app.use('/api/users', usersRouter);

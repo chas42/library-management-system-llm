@@ -6,8 +6,23 @@ export const loanController = {
   async getAll(req, res) {
     try {
       const db = req.app.locals.db;
-      const loans = await Loan.findAll(db);
-      res.json(loans);
+      const { page = 1, limit = 10, status } = req.query;
+
+      const result = await Loan.findAll(db, {
+        page: parseInt(page),
+        limit: parseInt(limit),
+        status
+      });
+
+      res.json({
+        loans: result.loans,
+        pagination: {
+          total: result.pagination.total,
+          page: result.pagination.page,
+          limit: result.pagination.limit,
+          totalPages: result.pagination.totalPages
+        }
+      });
     } catch (error) {
       res.status(500).json({ error: error.message });
     }

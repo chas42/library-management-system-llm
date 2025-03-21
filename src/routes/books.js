@@ -1,16 +1,29 @@
 import { Router } from 'express';
-import { body } from 'express-validator';
+import { body, query } from 'express-validator';
 import { bookController } from '../controllers/bookController.js';
 import { cacheMiddleware } from '../lib/cache.js';
 
 export const booksRouter = Router();
 
-// Cache book listings for 1 hour
-booksRouter.get('/', cacheMiddleware('books', 3600), bookController.getAll);
+// Get all books with pagination
+booksRouter.get('/', 
+  [
+    query('page').optional().isInt({ min: 1 }),
+    query('limit').optional().isInt({ min: 1, max: 100 }),
+    query('sortBy').optional().isIn(['title', 'publication_year', 'borrow_count']),
+    query('sortOrder').optional().isIn(['asc', 'desc'])
+  ],
+  cacheMiddleware('books', 3600), 
+  bookController.getAll
+);
 
-// Cache individual book details for 1 hour
-booksRouter.get('/:id', cacheMiddleware('book', 3600), bookController.getOne);
+// Get single book
+booksRouter.get('/:id', 
+  cacheMiddleware('book', 3600), 
+  bookController.getOne
+);
 
+// Create new book
 booksRouter.post('/',
   [
     body('title').notEmpty().trim(),

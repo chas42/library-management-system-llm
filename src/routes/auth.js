@@ -1,12 +1,10 @@
 import { Router } from 'express';
 import { body } from 'express-validator';
 import { authController } from '../controllers/authController.js';
-import { authLimiter } from '../middleware/rateLimiter.js';
 
 export const authRouter = Router();
 
 authRouter.post('/register',
-  authLimiter,
   [
     body('email').isEmail().withMessage('Valid email is required'),
     body('password').isLength({ min: 6 }).withMessage('Password must be at least 6 characters'),
@@ -18,7 +16,6 @@ authRouter.post('/register',
 );
 
 authRouter.post('/login',
-  authLimiter,
   [
     body('email').isEmail().withMessage('Valid email is required'),
     body('password').notEmpty().withMessage('Password is required')

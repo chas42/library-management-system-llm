@@ -1,8 +1,50 @@
 import crypto from 'crypto';
 
 export class Member {
-  static async findAll(db) {
-    return db.all('SELECT * FROM members');
+  static async findAll(db, { page = 1, limit = 10, search }) {
+    const offset = (page - 1) * limit;
+    let query = `
+      SELECT 
+        m.*,
+        COUNT(DISTINCT l.id) as total_loans,
+        SUM(CASE WHEN l.status = 'active' THEN 1 ELSE 0 END) as active_loans
+      FROM members m
+      LEFT JOIN loans l ON m.id = l.member_id
+    `;
+
+    const params = [];
+
+    if (search) {
+      query += ' WHERE m.name LIKE ? OR m.email LIKE ?';
+      const searchPattern = `%${search}%`;
+      params.push(searchPattern, searchPattern);
+    }
+
+    query += ' GROUP BY m.id';
+
+    // Get total count
+    const countQuery = `
+      SELECT COUNT(*) as total FROM members m
+      ${search ? 'WHERE m.name LIKE ? OR m.email LIKE ?' : ''}
+    `;
+    
+    const { total } = await db.get(countQuery, ...params);
+
+    // Add ordering and pagination
+    query += ' ORDER BY m.name ASC LIMIT ? OFFSET ?';
+    params.push(limit, offset);
+
+    const members = await db.all(query, ...params);
+
+    return {
+      members,
+      pagination: {
+        total,
+        page: parseInt(page),
+        limit: parseInt(limit),
+        totalPages: Math.ceil(total / limit)
+      }
+    };
   }
 
   static async findById(db, id) {
