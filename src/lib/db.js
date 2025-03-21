@@ -41,17 +41,6 @@ export const initDb = async () => {
     fs.mkdirSync(dbDir, { recursive: true });
   }
 
-  // Ensure the database file is not locked
-  if (fs.existsSync(dbPath)) {
-    try {
-      fs.unlinkSync(dbPath);
-    } catch (error) {
-      if (error.code !== 'ENOENT') {
-        console.error('Error removing existing database:', error);
-      }
-    }
-  }
-
   try {
     // Create new database connection with better configuration
     db = await open({
